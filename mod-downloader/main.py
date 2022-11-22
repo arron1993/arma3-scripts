@@ -1,5 +1,6 @@
 import re
 import argparse
+import subprocess
 
 ARMA3_APPID = 107410
 
@@ -11,7 +12,8 @@ def main(args):
 
     mod_ids = set(re.findall(r'https://.*?id=([0-9]+)', mods_html))
     for mod_id in mod_ids:
-        print(f"steamcmd +login {args.username} \"{args.password}\" +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit")
+        subprocess.run(f"steamcmd +login {args.username} \"{args.password}\" +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit".split())
+
 
 
 
