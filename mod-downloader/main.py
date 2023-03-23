@@ -3,12 +3,13 @@ import os
 import stat
 import argparse
 import subprocess
+import getpass
 
 from pathlib import Path
 
 ARMA3_APPID = 107410
 
-INSTALL_DIR = "/home/arron/arma3/gamedata"
+INSTALL_DIR = f"/home/arron/{getpass.getuser()}/gamedata"
 MOD_DIR_TEMPLATE = "./steamapps/workshop/content/{}/{}"
 
 HC_PASSWORD = os.environ.get("HC_PASSWORD")
@@ -51,9 +52,9 @@ def main(args):
     mod_directories = []
     for mod_id in mod_ids:
         mod_directories.append(MOD_DIR_TEMPLATE.format(ARMA3_APPID, mod_id))
-        # subprocess.run(
-        #     f"steamcmd +login {args.username} {args.password} +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit".split()
-        # )
+        subprocess.run(
+            f"steamcmd +login {args.username} {args.password} +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit".split()
+        )
 
     modset_name = Path(args.filename).stem
     generate_start_script(modset_name=modset_name, mods=mod_directories, profile_name=f"am_server_{modset_name}_profile", headless=False)
