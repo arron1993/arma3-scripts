@@ -3,12 +3,13 @@ import os
 import stat
 import argparse
 import subprocess
+import getpass
 
 from pathlib import Path
 
 ARMA3_APPID = 107410
 
-INSTALL_DIR = "/home/ubuntu/arma3/gamedata"
+INSTALL_DIR = f"/home/arron/{getpass.getuser()}/gamedata"
 MOD_DIR_TEMPLATE = "./steamapps/workshop/content/{}/{}"
 
 HC_PASSWORD = os.environ.get("HC_PASSWORD")
