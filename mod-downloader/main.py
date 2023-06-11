@@ -9,11 +9,12 @@ from pathlib import Path
 
 ARMA3_APPID = 107410
 
-INSTALL_DIR = f"/home/arron/{getpass.getuser()}/gamedata"
+INSTALL_DIR = f"/home/{getpass.getuser()}/arma3/gamedata"
 MOD_DIR_TEMPLATE = "./steamapps/workshop/content/{}/{}"
 
 HC_PASSWORD = os.environ.get("HC_PASSWORD")
 
+DOWNLOAD_MODS = True 
 
 def write_script(name, script):
     if not os.path.exists("./scripts"):
@@ -40,7 +41,7 @@ def generate_start_script(modset_name=None, mods=None, profile_name=None,  headl
         for x in range(3):
             _script = script.copy()
             _modset_name = f"{modset_name}_hc{x}"
-            _script.append(f"-client -connect=game.arron.id -password={HC_PASSWORD} -name={modset_name}")
+            _script.append(f"-client -connect=game.arron.id -password={HC_PASSWORD} -name={modset_name}_hc_{x}")
             write_script(_modset_name, ' '.join(_script))
     else:
         write_script(modset_name, ' '.join(script))
@@ -54,9 +55,10 @@ def main(args):
     mod_directories = []
     for mod_id in mod_ids:
         mod_directories.append(MOD_DIR_TEMPLATE.format(ARMA3_APPID, mod_id))
-        subprocess.run(
-            f"steamcmd +login {args.username} {args.password} +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit".split()
-        )
+        if DOWNLOAD_MODS:
+            subprocess.run(
+                 f"steamcmd +login {args.username} {args.password} +force_install_dir {INSTALL_DIR} +workshop_download_item {ARMA3_APPID} {mod_id} validate +quit".split()
+            )
 
     modset_name = Path(args.filename).stem
     generate_start_script(modset_name=modset_name, mods=mod_directories, profile_name=f"am_server_{modset_name}_profile", headless=False)
