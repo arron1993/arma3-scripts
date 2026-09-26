@@ -10,6 +10,6 @@ if ! $(which steamcmd); then
 	sudo apt install lib32gcc-s1 steamcmd rename 
 fi
 
-steamcmd +login arron_cli +force_install_dir $INSTALL_DIR app_update 233780 validate
+steamcmd force_install_dir $INSTALL_DIR +login arron_cli +app_update 233780 -beta creatordlc validate
 mkdir -p ~/".local/share/Arma 3" && mkdir -p ~/".local/share/Arma 3 - Other Profiles"
 
