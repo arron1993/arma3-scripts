@@ -53,9 +53,10 @@ def download_mods_via_runscript(username, password, mod_ids):
     """Generates a temporary script file to run all SteamCMD commands in one session."""
     print(f"Preparing to download {len(mod_ids)} mods in a single SteamCMD session...")
     
+    # SteamCMD requires setting the install directory BEFORE logging in
     script_lines = [
-        f"login {username} {password}",
-        f"force_install_dir {INSTALL_DIR}"
+        f"force_install_dir {INSTALL_DIR}",
+        f"login {username} {password}"
     ]
     
     for mod_id in mod_ids:
@@ -98,6 +99,17 @@ def lowercase_bikey_files(base_dir: Path):
             
     print(f"Successfully lowercased {count} .bikey files.")
 
+def clear_workshop_cache():
+    """Deletes the SteamCMD workshop cache file to prevent download failures."""
+    cache_file = INSTALL_DIR / "steamapps" / "workshop" / f"appworkshop_{ARMA3_APPID}.acf"
+    
+    try:
+        if cache_file.exists():
+            cache_file.unlink()
+            print("Cleared SteamCMD workshop cache file.")
+    except PermissionError:
+        print(f"Warning: Permission denied. Could not delete {cache_file}")
+
 def main(args):
     html_file = Path(args.filename)
     if not html_file.exists():
@@ -124,6 +136,7 @@ def main(args):
                 mods_to_download.append(mod_id)
         
         if mods_to_download:
+            clear_workshop_cache()
             download_mods_via_runscript(args.username, args.password, mods_to_download)
         else:
             print("No mods selected for download.")
