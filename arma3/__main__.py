@@ -24,11 +24,20 @@ def setup(cfg: Config):
     steamcmd.update_server(cfg)
 
 
+def use(config_path: Path, mod_list: str):
+    mods.load_mod_list(mod_list)
+    config.set_mod_list(config_path, mod_list)
+    cfg = config.load(config_path)
+    print(f"Switched to {mod_list} (CDLC: {', '.join(cfg.cdlc) or 'none'})")
+    mods.install(cfg)
+
+
 def main():
     parser = argparse.ArgumentParser(prog="arma3", description="Arma 3 dedicated server management")
     parser.add_argument("-c", "--config", type=Path, default=config.DEFAULT_CONFIG, help="Path to config.ini")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    sub.add_parser("init", help="Create config.ini with defaults and placeholders to fill in")
     sub.add_parser("setup", help="Install steamcmd and the server, and log in to Steam (safe to re-run)")
     sub.add_parser("login", help="Log in to Steam interactively and cache the credentials")
     sub.add_parser("update", help="Update the server on the configured branch")
@@ -38,9 +47,17 @@ def main():
     install_parser = mods_sub.add_parser("install", help="Download the configured mod list and lowercase them")
     install_parser.add_argument("--only", metavar="MOD_ID", help="Only install this mod from the mod list")
 
+    use_parser = sub.add_parser("use", help="Switch to another mod list and install its mods")
+    use_parser.add_argument("mod_list", help="Name of a mod list in mod_lists/, without .html")
+
     sub.add_parser("start", help="Start the server and headless clients; Ctrl+C stops them all")
 
     args = parser.parse_args()
+    if args.command == "init":
+        config.create(args.config, sorted(p.stem for p in mods.MOD_LISTS_DIR.glob("*.html")))
+        print(f"Created {args.config}. Fill in the {config.PLACEHOLDER} values before running anything else.")
+        return
+
     cfg = config.load(args.config)
 
     try:
@@ -52,6 +69,8 @@ def main():
             steamcmd.update_server(cfg)
         elif args.command == "mods" and args.mods_command == "install":
             mods.install(cfg, args.only)
+        elif args.command == "use":
+            use(args.config, args.mod_list)
         elif args.command == "start":
             server.start(cfg)
     except (steamcmd.SteamCmdError, mods.ModError, server.ServerError) as e:
