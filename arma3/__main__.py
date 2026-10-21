@@ -1,5 +1,8 @@
 import argparse
+import os
 from pathlib import Path
+
+import uvicorn
 
 from . import config, mods, server, steamcmd
 from .config import Config
@@ -24,14 +27,6 @@ def setup(cfg: Config):
     steamcmd.update_server(cfg)
 
 
-def use(config_path: Path, mod_list: str):
-    mods.load_mod_list(mod_list)
-    config.set_mod_list(config_path, mod_list)
-    cfg = config.load(config_path)
-    print(f"Switched to {mod_list} (CDLC: {', '.join(cfg.cdlc) or 'none'})")
-    mods.install(cfg)
-
-
 def main():
     parser = argparse.ArgumentParser(prog="arma3", description="Arma 3 dedicated server management")
     parser.add_argument("-c", "--config", type=Path, default=config.DEFAULT_CONFIG, help="Path to config.ini")
@@ -52,6 +47,11 @@ def main():
 
     sub.add_parser("start", help="Start the server and headless clients; Ctrl+C stops them all")
 
+    web_parser = sub.add_parser("web", help="Run the web interface")
+    web_parser.add_argument("--host", default="127.0.0.1", help="Address to listen on")
+    web_parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+    web_parser.add_argument("--dev", action="store_true", help="Reload when the code changes")
+
     args = parser.parse_args()
     if args.command == "init":
         config.create(args.config, sorted(p.stem for p in mods.MOD_LISTS_DIR.glob("*.html")))
@@ -70,9 +70,12 @@ def main():
         elif args.command == "mods" and args.mods_command == "install":
             mods.install(cfg, args.only)
         elif args.command == "use":
-            use(args.config, args.mod_list)
+            mods.use(args.config, args.mod_list)
         elif args.command == "start":
             server.start(cfg)
+        elif args.command == "web":
+            os.environ["ARMA3_CONFIG"] = str(args.config.resolve())
+            uvicorn.run("arma3.web:app", host=args.host, port=args.port, reload=args.dev, timeout_graceful_shutdown=1)
     except (steamcmd.SteamCmdError, mods.ModError, server.ServerError) as e:
         raise SystemExit(f"Error: {e}")
 
