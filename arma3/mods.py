@@ -2,7 +2,7 @@ import os
 import re
 from pathlib import Path
 
-from . import steamcmd
+from . import config, steamcmd
 from .config import Config
 
 GAME_APPID = "107410"
@@ -73,3 +73,11 @@ def install(cfg: Config, only=None):
     if failed:
         raise ModError(f"Failed to download: {', '.join(failed)}")
     print(f"Installed {len(mod_ids)} mod(s)")
+
+
+def use(config_path: Path, mod_list: str):
+    load_mod_list(mod_list)
+    config.set_mod_list(config_path, mod_list)
+    cfg = config.load(config_path)
+    print(f"Switched to {mod_list} (CDLC: {', '.join(cfg.cdlc) or 'none'})")
+    install(cfg)
