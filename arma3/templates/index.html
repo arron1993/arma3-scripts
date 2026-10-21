@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arma 3 Server</title>
+</head>
+<body>
+<h1>Arma 3 Server</h1>
+<h2>Mod lists</h2>
+<ul>
+  {% for name in mod_lists %}
+  <li>{{ name }}</li>
+  {% endfor %}
+</ul>
+<h2>Update</h2>
+<button id="update">Update server</button>
+<pre id="update-log"></pre>
+<script>
+const updateLog = document.getElementById("update-log");
+let source;
+
+function streamUpdateLog() {
+  if (source) {
+    source.close();
+  }
+  updateLog.textContent = "";
+  source = new EventSource("/api/update/log");
+  source.onmessage = (event) => {
+    updateLog.textContent += event.data + "\n";
+  };
+}
+
+document.getElementById("update").addEventListener("click", async () => {
+  await fetch("/api/update", { method: "POST" });
+  streamUpdateLog();
+});
+
+streamUpdateLog();
+</script>
+</body>
+</html>
